@@ -1,224 +1,226 @@
 from manim import *
+
 class StockAnimation(Scene):
     def construct(self):
 
-        # ------------------------------------------------------------
-        # 1) TITLE
-        # ------------------------------------------------------------
+        # =====================================================================
+        # 1) TITLE SECTION
+        # =====================================================================
         title = Text("Best Time to Buy and Sell Stock II", font_size=52, weight=BOLD)
-        subtitle = Text("Complete Explanation + Visualization + Code", font_size=28)
-        header = VGroup(title, subtitle).arrange(DOWN, buff=0.4)
+        subtitle = Text("Complete Visual Explanation + Buy/Sell Animation", font_size=28)
+        header = VGroup(title, subtitle).arrange(DOWN, buff=0.3)
 
         self.play(FadeIn(header, shift=UP))
         self.wait(2)
         self.play(FadeOut(header))
 
-        # ------------------------------------------------------------
-        # 2) PROBLEM STATEMENT
-        # ------------------------------------------------------------
-        problem = Paragraph(
-            "You are given an array prices where prices[i] is the price of a stock on day i.",
-            "",
-            "You may buy and sell multiple times, but you can hold at most one share at a time.",
-            "",
-            "Goal: Return the maximum profit possible.",
-            alignment="left",
-            font_size=30,
-            line_spacing=1.2
-        )
+        # =====================================================================
+        # 2) EXAMPLE INTRO
+        # =====================================================================
+        intro = Text("Example: prices = [7, 1, 5, 3, 6, 4]", font_size=34)
+        self.play(FadeIn(intro))
+        self.wait(2)
+        self.play(FadeOut(intro))
 
-        self.play(FadeIn(problem))
-        self.wait(4)
-        self.play(FadeOut(problem))
-
-        # ------------------------------------------------------------
-        # 3) EXAMPLES
-        # ------------------------------------------------------------
-        ex_title = Text("Examples", font_size=40, weight=BOLD)
-        ex_list = Paragraph(
-            "1) prices = [7, 1, 5, 3, 6, 4] → Output: 7",
-            "2) prices = [1, 2, 3, 4, 5] → Output: 4",
-            "3) prices = [7, 6, 4, 3, 1] → Output: 0",
-            alignment="left",
-            font_size=28,
-            line_spacing=1.3
-        )
-
-        example_block = VGroup(ex_title, ex_list).arrange(DOWN, buff=0.4)
-
-        self.play(FadeIn(example_block))
-        self.wait(4)
-        self.play(FadeOut(example_block))
-
-        # ------------------------------------------------------------
-        # 4) GRAPH VISUALIZATION
-        # ------------------------------------------------------------
-        graph_title = Text("Visualizing Example 1", font_size=40)
+        # =====================================================================
+        # 3) DRAW PRICE GRAPH
+        # =====================================================================
+        graph_title = Text("Price Graph", font_size=40)
         self.play(FadeIn(graph_title))
         self.wait(1)
         self.play(graph_title.animate.to_edge(UP))
 
         prices = [7, 1, 5, 3, 6, 4]
-        x_start = -3.5
-        y_start = -2
-        x_scale = 1.3
+
+        x_start = -5
+        y_base = -2
+        x_step = 1.5
         y_scale = 0.25
 
-        dots, labels = [], []
+        dots = []
+        labels = []
 
+        # Draw dot for each price
         for i, p in enumerate(prices):
-            dot = Dot([x_start + i * x_scale, y_start + p * y_scale, 0])
+            dot = Dot([x_start + i*x_step, y_base + p*y_scale, 0], color=WHITE)
             label = Text(str(p), font_size=26).next_to(dot, UP, buff=0.15)
             dots.append(dot)
             labels.append(label)
 
-        self.play(*[FadeIn(d) for d in dots])
-        self.play(*[FadeIn(lbl) for lbl in labels])
+        self.play(*[FadeIn(d) for d in dots], *[FadeIn(l) for l in labels])
+        self.wait(1)
 
+        # Connect with lines
         lines = []
-        for i in range(len(dots) - 1):
-            line = Line(dots[i].get_center(), dots[i + 1].get_center())
+        for i in range(len(prices)-1):
+            line = Line(dots[i].get_center(), dots[i+1].get_center(), color=GRAY)
             lines.append(line)
             self.play(Create(line), run_time=0.4)
 
-        self.wait(2)
-        self.play(
-            FadeOut(graph_title),
-            *[FadeOut(d) for d in dots],
-            *[FadeOut(lbl) for lbl in labels],
-            *[FadeOut(ln) for ln in lines]
-        )
-
-        # ------------------------------------------------------------
-        # 5) PROFIT CALCULATION (STEP-BY-STEP)
-        # ------------------------------------------------------------
-        calc_title = Text("Step-by-Step Profit Calculation", font_size=40)
-        self.play(FadeIn(calc_title))
         self.wait(1)
-        self.play(calc_title.animate.to_edge(UP))
 
-        steps = []
-        total_profit = 0
+        # =====================================================================
+        # 4) DATA-STRUCTURE STYLE BUY/SELL ANIMATION
+        # =====================================================================
+        pointer = Triangle(color=YELLOW, fill_opacity=1).scale(0.2)
+        pointer.next_to(dots[0], DOWN, buff=0.2)
+        self.play(FadeIn(pointer))
 
-        for i in range(len(prices) - 1):
+        profit_val = 0
+        profit_text = Text(f"Profit: {profit_val}", font_size=34, color=GREEN).to_edge(UP)
+        self.play(FadeIn(profit_text))
+
+        buy_sell_objects = []
+
+        # Loop through days
+        for i in range(len(prices)-1):
+
+            # Move pointer to current day
+            self.play(pointer.animate.move_to(dots[i].get_center() + DOWN*0.4), run_time=0.4)
+
             today = prices[i]
-            tomorrow = prices[i + 1]
+            tomorrow = prices[i+1]
 
             if tomorrow > today:
-                profit = tomorrow - today
-                total_profit += profit
 
-                step_text = Text(
-                    f"Buy at {today}, Sell at {tomorrow} → +{profit}",
-                    font_size=30
+                # BUY marker
+                buy_arrow = Arrow(
+                    dots[i].get_center() + DOWN*0.5,
+                    dots[i].get_center(),
+                    buff=0.1, color=GREEN
                 )
-                steps.append(step_text)
+                buy_label = Text("BUY", font_size=24, color=GREEN).next_to(dots[i], DOWN)
+                buy_sell_objects += [buy_arrow, buy_label]
 
-                group = VGroup(*steps).arrange(DOWN, buff=0.5).move_to(ORIGIN)
+                self.play(FadeIn(buy_arrow), FadeIn(buy_label))
 
-                if len(steps) == 1:
-                    self.play(FadeIn(group))
-                else:
-                    self.play(Transform(prev_group, group))
+                # SELL marker
+                sell_arrow = Arrow(
+                    dots[i+1].get_center() + UP*0.5,
+                    dots[i+1].get_center(),
+                    buff=0.1, color=RED
+                )
+                sell_label = Text("SELL", font_size=24, color=RED).next_to(dots[i+1], UP)
+                buy_sell_objects += [sell_arrow, sell_label]
 
-                prev_group = group
-                self.wait(0.7)
+                # Highlight line
+                highlight = Line(
+                    dots[i].get_center(),
+                    dots[i+1].get_center(),
+                    color=GREEN,
+                    stroke_width=6
+                )
+                buy_sell_objects.append(highlight)
 
+                # Animate segment
+                self.play(
+                    Create(highlight),
+                    FadeIn(sell_arrow), FadeIn(sell_label),
+                    pointer.animate.move_to(dots[i+1].get_center() + DOWN*0.4),
+                    run_time=0.7
+                )
+
+                # Update profit
+                diff = tomorrow - today
+                profit_val += diff
+
+                new_profit_text = Text(f"Profit: {profit_val}", font_size=34, color=GREEN).to_edge(UP)
+                self.play(Transform(profit_text, new_profit_text))
+
+                self.wait(0.4)
+
+            else:
+                self.play(pointer.animate.move_to(dots[i+1].get_center() + DOWN*0.4), run_time=0.4)
+                self.wait(0.2)
+
+        self.wait(1)
+
+        # Fade out graph visuals
+        self.play(*[FadeOut(m) for m in buy_sell_objects],
+                  FadeOut(pointer),
+                  FadeOut(graph_title),
+                  *[FadeOut(d) for d in dots],
+                  *[FadeOut(l) for l in labels],
+                  *[FadeOut(ln) for ln in lines],
+                  FadeOut(profit_text))
+
+        # =====================================================================
+        # 5) IMPROVED EXPLANATION SECTION (NEAT + CLEAN)
+        # =====================================================================
+        self.clear()
+
+        explain_title = Text("How the Final Profit is Calculated", font_size=42, weight=BOLD)
+        self.play(FadeIn(explain_title, shift=UP))
         self.wait(2)
+        self.play(FadeOut(explain_title))
 
-        # 100% GUARANTEED FIX: Clear all leftover objects
+        explanation_steps = [
+            "We compare each day's price with the next day's price.",
+            "If the next day's price is higher → we make a transaction.",
+            "We 'buy' today and 'sell' tomorrow.",
+            "We add the difference (sell - buy) to our profit.",
+            "This captures all rising segments of the graph.",
+            "This greedy method guarantees the maximum profit possible."
+        ]
+
+        for step in explanation_steps:
+            t = Text(step, font_size=32)
+            self.play(FadeIn(t))
+            self.wait(2)
+            self.play(FadeOut(t))
+
+        # =====================================================================
+        # 6) BREAKDOWN OF THIS EXAMPLE'S ACTUAL TRANSACTIONS
+        # =====================================================================
+        breakdown_title = Text("Breakdown of Transactions", font_size=40, weight=BOLD)
+        self.play(FadeIn(breakdown_title))
+        self.wait(1.5)
+        self.play(breakdown_title.animate.to_edge(UP))
+
+        transactions = [
+            "Buy at 1, Sell at 5 → Profit +4",
+            "Buy at 3, Sell at 6 → Profit +3"
+        ]
+
+        y_offset = 1
+        for tstep in transactions:
+            tx = Text(tstep, font_size=32)
+            tx.move_to([0, y_offset, 0])
+            y_offset -= 1.2
+            self.play(FadeIn(tx, shift=DOWN))
+            self.wait(2)
+            self.play(FadeOut(tx))
+
+        # =====================================================================
+        # 7) TOTAL PROFIT SUMMARY
+        # =====================================================================
+        summary_title = Text("Total Calculation", font_size=40)
+        self.play(FadeIn(summary_title))
+        self.wait(1)
+        self.play(summary_title.animate.to_edge(UP))
+
+        l1 = Text("Profit from first rise: 5 - 1 = 4", font_size=32)
+        l2 = Text("Profit from second rise: 6 - 3 = 3", font_size=32)
+        l3 = Text("Total Profit = 4 + 3 = 7", font_size=38, color=GREEN)
+
+        summary_group = VGroup(l1, l2, l3).arrange(DOWN, buff=0.4)
+        self.play(FadeIn(summary_group))
+        self.wait(3)
+        self.play(FadeOut(summary_group), FadeOut(summary_title))
+
         self.clear()
 
-        # ------------------------------------------------------------
-        # 6) IMPLEMENTATION CONCEPT EXPLANATION
-        # ------------------------------------------------------------
-        concept_title = Text("How We Implement the Solution", font_size=40)
-        concept_lines = Paragraph(
-            "We loop through the price array.",
-            "If today's price < tomorrow's price → we buy today and sell tomorrow.",
-            "We keep adding all positive differences.",
-            "This is a Greedy Strategy.",
-            alignment="left",
-            font_size=28,
-            line_spacing=1.2,
-        )
-
-        concept_group = VGroup(concept_title, concept_lines).arrange(DOWN, buff=0.5)
-
-        self.play(FadeIn(concept_group))
-        self.wait(4)
-        self.play(FadeOut(concept_group))
-
-        # ------------------------------------------------------------
-        # 7) SHOW C++ CODE
-        # ------------------------------------------------------------
-        code_title = Text("C++ Solution", font_size=40)
-
-        cpp_code_text = Paragraph(
-            "class Solution {",
-            "public:",
-            "    int maxProfit(vector<int>& prices) {",
-            "        int profit = 0;",
-            "",
-            "        for (int i = 1; i < prices.size(); i++) {",
-            "            if (prices[i] > prices[i - 1]) {",
-            "                profit += prices[i] - prices[i - 1];",
-            "            }",
-            "        }",
-            "",
-            "        return profit;",
-            "    }",
-            "};",
-            alignment="left",
-            font_size=24,
-            line_spacing=0.6
-        )
-
-        code_group = VGroup(code_title, cpp_code_text).arrange(DOWN, buff=0.5)
-
-        self.play(FadeIn(code_group))
-        self.wait(5)
-        self.play(FadeOut(code_group))
-
-        # ------------------------------------------------------------
-        # 8) EXPLAIN CODE LOGIC
-        # ------------------------------------------------------------
-        explain_title = Text("Explanation of Code", font_size=40)
-        explain_lines = Paragraph(
-            "• Initialize profit = 0",
-            "• Loop from i = 1 to n-1",
-            "• If price[i] > price[i-1], add the difference to profit",
-            "• Return total profit",
-            alignment="left",
-            font_size=28,
-            line_spacing=1.2
-        )
-
-        explain_group = VGroup(explain_title, explain_lines).arrange(DOWN, buff=0.5)
-
-        self.play(FadeIn(explain_group))
-        self.wait(4)
-        self.play(FadeOut(explain_group))
-
-        # CLEAR EVERYTHING BEFORE FINAL ANSWER (100% FIX)
-        self.clear()
-
-        # ------------------------------------------------------------
-        # 9) FINAL ANSWER
-        # ------------------------------------------------------------
-        final_box = RoundedRectangle(width=8, height=1.5, color=GREEN)
-        final_text = Text("Maximum Profit = 7", font_size=38, color=GREEN)
+        # =====================================================================
+        # 8) FINAL ANSWER
+        # =====================================================================
+        final_box = RoundedRectangle(width=7, height=1.5, color=GREEN)
+        final_text = Text("Maximum Profit = 7", font_size=40, color=GREEN)
         final_text.move_to(final_box.get_center())
-
-        final_group = VGroup(final_box, final_text)
 
         self.play(Create(final_box), FadeIn(final_text))
         self.wait(2)
-        self.play(FadeOut(final_group))
+        self.play(FadeOut(final_box), FadeOut(final_text))
 
-        # ------------------------------------------------------------
-        # END
-        # ------------------------------------------------------------
         thank = Text("Thank You!", font_size=40)
         self.play(FadeIn(thank))
         self.wait(2)
